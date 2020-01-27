@@ -1,5 +1,5 @@
 ---
 required_pkgs:
-  - libselinux-python
+  - "{{ ( (ansible_distribution_major_version | int) < 31) | ternary('libselinux-python','python3-libselinux') }}"
   - device-mapper-libs
   - ebtables

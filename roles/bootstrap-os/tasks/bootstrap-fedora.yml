@@ -45,21 +45,54 @@
     - need_http_proxy.rc != 0
     - not is_atomic
 
+
+# Determin distribution version number in raw mode
+- name: Determine Fedora distribution version in raw mode
+  raw: cat /etc/system-release | grep -o -E '[0-9]+'
+  register: bootstrap_fedora_major_version
+  become: true
+  failed_when: false
+  changed_when: false
+
+- debug:
+    var: bootstrap_fedora_major_version
+
+- debug:
+    var: bootstrap_fedora_major_version.stdout
+
+- debug: 
+    var: (bootstrap_fedora_major_version.stdout | int) < 31
+
 # Fedora's policy as of Fedora 30 is to still install python2 as /usr/bin/python
 # See https://fedoraproject.org/wiki/FinalizingFedoraSwitchtoPython3 for the current status
-- name: Install python on fedora
+- name: Install python on fedora 30 and below
   raw: "dnf install --assumeyes --quiet python2"
   become: true
   environment: {}
   when:
     - need_bootstrap.rc != 0
     - not is_atomic
+    - (bootstrap_fedora_major_version.stdout | int) < 31
+
+
+
+# Fedora's policy as of Fedora 31 is to install python3 as /usr/bin/python
+# See https://fedoraproject.org/wiki/FinalizingFedoraSwitchtoPython3 for the current status
+- name: Install python on fedora 31 and following
+  raw: "dnf install --assumeyes --quiet python"
+  become: true
+  environment: {}
+  when:
+    - need_bootstrap.rc != 0
+    - not is_atomic
+    - (bootstrap_fedora_major_version.stdout | int)  > 30
+
 
 # libselinux-python is required on SELinux enabled hosts
 # See https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#managed-node-requirements
 - name: Install libselinux-python
   package:
-    name: libselinux-python
+    name: "{{ ( (bootstrap_fedora_major_version.stdout | int) < 31) | ternary('libselinux-python','python3-libselinux') }}"
     state: present
   become: true
   when:
