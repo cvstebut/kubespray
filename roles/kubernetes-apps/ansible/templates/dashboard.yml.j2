@@ -186,13 +186,6 @@ spec:
     spec:
       priorityClassName: system-cluster-critical
       containers:
-        - resources:
-          limits:
-            cpu: {{ dashboard_cpu_limit }}
-            memory: {{ dashboard_memory_limit }}
-          requests:
-            cpu: {{ dashboard_cpu_requests }}
-            memory: {{ dashboard_memory_requests }}
         - name: kubernetes-dashboard
           image: {{ dashboard_image_repo }}:{{ dashboard_image_tag }}
           imagePullPolicy: {{ k8s_image_pull_policy }}
