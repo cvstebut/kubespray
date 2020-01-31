@@ -184,7 +184,9 @@ spec:
       labels:
         k8s-app: kubernetes-dashboard
     spec:
-      priorityClassName: system-cluster-critical
+      # For kubernetes < 1.17, only pods in namespace kube-system are allowed to have critical pods
+      # see https://github.com/kubernetes/kubernetes/pull/76310
+      # priorityClassName: system-cluster-critical
       containers:
         - name: kubernetes-dashboard
           image: {{ dashboard_image_repo }}:{{ dashboard_image_tag }}
@@ -316,6 +318,15 @@ spec:
 
 {% if dashboard_admin_user %}
 ---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: admin-user
+  namespace: kubernetes-dashboard
+
+---
+
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
